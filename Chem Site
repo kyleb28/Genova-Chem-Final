@@ -1,0 +1,188 @@
+from drafter import *
+from dataclasses import dataclass
+from bakery import assert_equal
+
+@dataclass
+class State:
+    message: str
+    number: int
+    element: int
+    likes_chemistry: bool
+    prefers_organic: bool
+    
+@route
+def index(state: State) -> Page:
+    '''
+    This function sets up the first page of the website with buttons to link one page to another,
+    and a checkbox which brings you to an article depending on your choice. It also has a picture
+    related to chemistry.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+    
+    Returns:
+        Page: that is updated with the correct buttons, an image, and a checkbox question.
+    '''
+    return Page(state, [
+        state.message,
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        Image("https://bright-culture.com/wp-content/uploads/2021/06/learn-chemistry-optimized.jpg", 500, 350),
+        "Check this box if you like chemistry!",
+        CheckBox("do_you_like_chemistry", state.likes_chemistry),
+        "Click this button for a link to an article!",
+        Button("Go to Article", Chemistry_Article)
+        ])
+
+@route
+def Chemistry_Facts(state: State) -> Page:
+    '''
+    This function produces a new page with facts about chemistry.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+        
+    Returns:
+        Page: that is updated with the correct buttons and facts about chemistry.
+    '''
+    return Page(state, [
+        state.message,
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        "Water's chemical formula is H2O."
+        " Carbon has an atomic number of 6."
+        " Oxygen makes up about 21% of Earth's atmosphere."
+        " Dmitri Mendeleev created the periodic table in 1869."
+        " The chemical symbol for gold is Au."
+        ])
+
+@route
+def Chemistry_Quiz(state: State) -> Page:
+    '''
+    This function produces a new page that allows the user to answer trivia questions via a drop-down select menu, 
+    then click a button to see the answers.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+        
+    Returns:
+        Page: that is updated with the correct buttons and the trivia quiz questions and dropdown menus.
+    '''
+    return Page(state, [
+        state.message,
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        "What is the atomic number of oxygen?",
+        SelectBox("atomic_number", [6, 8, 16, 18], state.number),
+        "Which element is represented by the symbol 'Na'?",
+        SelectBox("element_symbol", ["Sodium", "Nitrogen", "Sulfur", "Neon"], state.element),
+        "Click when ready for the answers",
+        Button("Reveal Answers", reveal_answers)
+        ])
+
+@route
+def Chemistry_Compound_Suggestor(state: State) -> Page:
+    '''
+    This function produces a new page that asks the user a question and, depending on their answer,
+    suggests a compound to explore.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+    Returns:
+        Page: that is updated with the correct buttons, a question, and a checkbox that directs the user to a new page with a suggestion.
+    '''
+    return Page(state, [
+        state.message,
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        "Do you prefer organic chemistry?",
+        CheckBox("is_organic_preferred", state.prefers_organic),
+        "This button will suggest a compound for you",
+        Button("Suggest Compound", view_suggestion)
+        ])
+
+@route
+def view_suggestion(state: State, is_organic_preferred: bool) -> Page:
+    '''
+    This function is called in the Chemistry_Compound_Suggestor function and produces a suggestion
+    based on the user's answer.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+    Returns:
+        Page: that outputs a suggestion depending on the user's choice.
+    '''
+    if is_organic_preferred:
+        suggestion = "You should explore benzene, a fundamental organic compound!"
+        video_url = "https://youtu.be/0AGtjtlRZ74"
+    else:
+        suggestion = "You should explore sodium chloride, a common ionic compound!"
+        video_url = "https://youtu.be/DpkPxsVbHDo"
+    state.prefers_organic = is_organic_preferred
+    return Page(state, [
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        "Your suggestion:",
+        Link(suggestion, video_url)
+        ])
+
+@route
+def reveal_answers(state: State) -> Page:
+    '''
+    This function, called in the Chemistry_Quiz function, redirects the user to a new page with the quiz answers.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+    Returns:
+        Page: that is updated with the quiz answers for the user to check.
+    '''
+    return Page(state, [
+        state.message,
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        "Question 1: 8;"
+        " Question 2: Sodium"
+        ])
+
+@route
+def Chemistry_Article(state: State, do_you_like_chemistry: bool) -> Page:
+    '''
+    This function, called in the index function, redirects the user to a new page, depending on how they answer the question
+    on the index page.
+    
+    Args:
+        state(State): the data classes for all the variables we use/reuse throughout this code
+    Returns:
+        Page: that is updated with text and a link to an article, depending on the user's answer.
+    '''
+    if do_you_like_chemistry:
+        suggestion = "Chemistry is fascinating! Here is an article about the beauty of chemical reactions."
+        article_url = "https://www.chemistryworld.com/features/the-beauty-of-chemical-reactions/3010875.article"
+    else:
+        suggestion = "Discover why chemistry is essential in everyday life!"
+        article_url = "https://www.acs.org/education/whatischemistry.html"
+    state.likes_chemistry = do_you_like_chemistry
+    return Page(state, [
+        Button("Home", index),
+        Button("Facts", Chemistry_Facts),
+        Button("Trivia Quiz", Chemistry_Quiz),
+        Button("Compound Suggestor", Chemistry_Compound_Suggestor),
+        "Your article suggestion:",
+        Link(suggestion, article_url)
+        ])
+
+hide_debug_information()
+start_server(State(Header("All About Chemistry"), None, None, None, None))
+
